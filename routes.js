@@ -2,57 +2,62 @@ const express = require('express');
 const router = express.Router();
 let productos = require('./data');
 
-// GET: Listar productos [cite: 1511]
+// GET: Listar productos (Requisito 3)
 router.get('/productos', (req, res) => {
-    res.status(200).json(productos); // Respuesta exitosa 200 [cite: 1542]
+    res.status(200).json(productos);
 });
 
-// POST: Agregar nuevo producto [cite: 1511]
+// POST: Crear producto (Requisito 6 - Validación básica)
 router.post('/productos', (req, res) => {
     const { nombre, precio, categoria } = req.body;
 
-    // Validación: nombre y precio deben existir [cite: 1531]
+    // Validación: campos obligatorios y tipo de dato (Requisito 6)
     if (!nombre || precio === undefined) {
-        return res.status(400).json({ mensaje: "Nombre y precio son obligatorios" }); // Error 400 [cite: 1540]
+        return res.status(400).json({ error: "nombre y precio son obligatorios" });
     }
-    // Validación: precio debe ser número [cite: 1532]
     if (typeof precio !== 'number') {
-        return res.status(400).json({ mensaje: "El precio debe ser un número" });
+        return res.status(400).json({ error: "precio debe ser un número" });
     }
 
     const nuevoProducto = {
-        id: productos.length + 1, // ID automático [cite: 1514]
+        id: productos.length + 1, // ID automático
         nombre,
         precio,
-        categoria
+        categoria: categoria || "General"
     };
+
     productos.push(nuevoProducto);
-    res.status(201).json(nuevoProducto); // Creado 201 [cite: 1542]
+    res.status(201).json(nuevoProducto);
 });
 
-// PUT: Actualizar producto [cite: 1511]
+// PUT: Actualizar producto (Requisito 7 - Manejo de errores)
 router.put('/productos/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const index = productos.findIndex(p => p.id === id);
 
     if (index === -1) {
-        return res.status(404).json({ mensaje: "Producto no encontrado" }); // Error 404 [cite: 1538]
+        return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    // Validación básica para actualizar
+    if (req.body.precio && typeof req.body.precio !== 'number') {
+        return res.status(400).json({ error: "precio debe ser un número" });
     }
 
     productos[index] = { ...productos[index], ...req.body };
     res.status(200).json(productos[index]);
 });
 
-// DELETE: Eliminar producto [cite: 1511, 1568]
+// DELETE: Eliminar producto.
 router.delete('/productos/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const index = productos.findIndex(p => p.id === id);
 
     if (index !== -1) {
         productos.splice(index, 1);
-        return res.status(200).json({ mensaje: "Producto eliminado" });
+        return res.status(200).json({ mensaje: "Producto eliminado exitosamente" });
     }
-    res.status(404).json({ mensaje: "ID no encontrado" });
+    res.status(404).json({ error: "ID no encontrado" });
 });
 
 module.exports = router;
